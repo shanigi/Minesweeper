@@ -22,3 +22,8 @@ td {
     height: 40px;
     text-align: center;
 }
+
+.cell img {
+    width: 18px;
+    height: auto;
+}
