@@ -1,8 +1,11 @@
 'use strict'
 const MINE = 'MINE'
 const EMPTY = 'EMPTY'
+const FLAG = 'FLAG'
 
 const MINE_IMG = '<img src="img/mine icon.png">'
+const FLAG_IMG = '<img src="img/flag.png">'
+
 
 // Model:
 var gBoard
@@ -27,7 +30,7 @@ function getRandomInt(min, max) {
     min = Math.ceil(min)
     max = Math.floor(max)
     return Math.floor(Math.random() * (max - min) + min)
-  }
+}
 
 function initGame() {
     gBoard = buildBoard()
@@ -39,6 +42,13 @@ function initGame() {
             var i = Math.floor(index / gLevel.SIZE)
             var j = index % gLevel.SIZE
             onCellClicked(cell, i, j)
+        })
+        cell.addEventListener('contextmenu', function (event) {
+            event.preventDefault()
+            var i = Math.floor(index / gLevel.SIZE)
+            var j = index % gLevel.SIZE
+            onCellRightClicked(cell, i, j)
+
         })
     })
 }
@@ -54,13 +64,11 @@ function buildBoard() {
                 isMine: false,
                 isMarked: false
             }
-
             if ((i === 1 && j === 1) || (i === 2 && j === 2)) {
                 cell.isMine = true
             }
 
-            // cell.isMine = getRandomInt(0, gLevel.MINES) 
-
+            // cell.isMine = getRandomInt(0, gLevel.MINES)
             board[i][j] = cell
         }
     }
@@ -80,6 +88,10 @@ function renderBoard(board) {
             strHTML += `<td class="cell" onclick="onCellClicked(${i},${j})">${cellContent}</td>\n`
             if (cell && cell.isMine)
                 strHTML += MINE_IMG
+        }
+        if (cell && cell.isMarked) {
+            strHTML += FLAG_IMG
+            cell.isShown = true
         }
         strHTML += '</tr>\n'
     }
@@ -103,18 +115,52 @@ function setMinesNegsCount(rowIdx, colIdx, board) {
 var board = buildBoard()
 console.log(setMinesNegsCount(1, 2, board))
 
-function onCellClicked(elCell, i, j) {
+
+function onCellRightClicked(elCell, i, j) {
     var cell = gBoard[i] && gBoard[i][j]
-    if (cell && cell.isMine) {
-        // alert('Game over')
-        elCell.innerHTML = MINE_IMG
-    } else if (cell && !cell.isMine) {
-        cell.isShown = true
-        cell.isMarked = true
-        cell.minesAroundCount = setMinesNegsCount(i, j, gBoard)
-        // renderBoard(gBoard)
-        // elCell.innerHTML = minesAroundCount
-        elCell.innerHTML = cell.minesAroundCount
+
+    if (cell && cell.isShown) {
+        return
+    }
+    cell.isMarked = !cell.isMarked
+
+    if (cell.isMarked) {
+        elCell.innerHTML = FLAG_IMG
+        elCell.classList.add('mark')
+    } else {
+        elCell.innerHTML = ''
+        elCell.classList.remove('mark')
+    }
+    gGame.markedCount += cell.isMarked ? 1 : -1
+
+    console.log('check right click')
+}
+
+function onCellClicked(elCell, i, j) {
+    if (!elCell) {
+        console.error('Invalid cell element')
+        return
+    }
+    var cell = gBoard[i] && gBoard[i][j]
+    console.log('check after marked')
+
+    if (cell && cell.isMarked) {
+        return
+    }
+    else {
+        if (cell && cell.isMine) {
+            // alert('Game over')
+            elCell.innerHTML = MINE_IMG
+        } else if (cell && !cell.isMine) {
+            cell.isShown = true
+            cell.isMarked = true
+            cell.minesAroundCount = setMinesNegsCount(i, j, gBoard)
+            // renderBoard(gBoard)
+            // elCell.innerHTML = minesAroundCount
+            elCell.innerHTML = cell.minesAroundCount
+        }
         console.log('check', cell.minesAroundCount)
     }
 }
+
+
